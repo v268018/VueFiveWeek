@@ -5,11 +5,13 @@ const app=Vue.createApp({
            api:'v268018',
            products:{},//產品列表
            tempProduct:{},//暫定單筆產品資訊(調整)
-           carts:{},//購物車列表
+           carts:{
+            carts: []
+           },//購物車列表
            loading:{//判斷載入各種資料(寫物件是因為要讓子元件好修改)
                 itemState:'', 
            },
-           isLoading:true,
+           isLoading:false,
            form:{//表單內容
             "user": {
               "name": "",
@@ -28,14 +30,17 @@ const app=Vue.createApp({
         },
         createdOrder(){//建立結帳
             const url = `${this.url}/api/${this.api}/order`;
+            this.isLoading=true;
             axios.post(url,{data:this.form})
             .then(res=>{
                 console.log(res);
                 if(res.data.success){
+                    this.isLoading=false;
                     alert(res.data.message);
                     this.$refs.form.resetForm();//重製使用者資訊
                     this.getCart();//重製購物車列表畫面
                 }else{
+                    this.isLoading=false;
                     alert(res.data.message);
                 }
             }).catch(err=>{
@@ -89,15 +94,11 @@ const app=Vue.createApp({
         addCart(id,qty=1){//加入購物車
             const url = `${this.url}/api/${this.api}/cart`;
             const postData = {"product_id":id,qty} ;
-
-            this.loading.itemState=id;//沒有辦法把id加入作為loading效果為判斷
-            console.log(this.loading.itemState===id);
-            console.log(this.loading.itemState);
-
-            this.$refs.userProductModal.hideModal();//關掉modal
+            this.loading.itemState=id;
             axios.post(url,{"data":postData})
             .then(res=>{
                 if(res.data.success){
+                    this.$refs.userProductModal.hideModal();//關掉modal
                     alert(res.data.message);
                     this.getCart();
                     this.loading.itemState='';
@@ -120,6 +121,7 @@ const app=Vue.createApp({
             }).catch(err=>{
                 console.log(err);
             })
+            
         },
         getProducts(){//取得產品列表(所有)
             const url = `${this.url}/api/${this.api}/products/all`
@@ -139,6 +141,7 @@ const app=Vue.createApp({
             }).catch(err=>{
                 console.log(err);
             })
+            
         },
     },
     created() {
@@ -242,6 +245,6 @@ app.component('userProductModal',{
      this.userProductModal=new bootstrap.Modal(this.$refs.modal);//初始化modal
    },
 })
-// app.component('loading', VueLoading) //加入loading效果有問題
+app.component('loading', VueLoading) //加入loading效果有問題
 app.mount('#app');
 
